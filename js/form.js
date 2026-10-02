@@ -1,6 +1,7 @@
 // Diary – one pack as a form: shows its questions, applies the branching, saves as you go.
 import { dbGet, dbGetAll, dbPut } from './db.js';
 import { getConfig, getConfigInfo } from './config.js';
+import { scheduleSync } from './sync.js';
 import {
   logicalDate, formatLongDate, formatShortDate, isISODate, nowLocalISO, escapeHtml as esc,
   isAnswered, makeAnswerLookup, packVisibility, evaluate, computeScore
@@ -329,7 +330,8 @@ async function writePack(pack, date, values, answersFor) {
   if (!changed) return false;
   entry.modified_at = now;
   entry.config_sha = getConfigInfo().sha;
-  entry.sync = { dirty: true };                // "needs upload" – used from Step 6
+  entry.sync = { ...(entry.sync || {}), dirty: true };   // "needs upload"; keeps the GitHub file version
   await dbPut('entries', entry);
+  scheduleSync();
   return true;
 }

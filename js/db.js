@@ -80,18 +80,26 @@ export function dbGetAll(store) {
   return run(store, 'readonly', (s) => s.getAll());
 }
 
-// Replaces the demo database with new contents: settings as { key: value }, entries as a list.
-export async function writeDemoDatabase(settings, entries) {
-  if (dbPromise && isDemoMode()) {           // close our own connection first, or the delete is blocked
-    (await dbPromise).close();
-    dbPromise = null;
-  }
-  await new Promise((resolve, reject) => {
-    const request = indexedDB.deleteDatabase(DEMO_DB);
+function deleteDatabase(name) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.deleteDatabase(name);
     request.onsuccess = resolve;
     request.onerror = () => reject(request.error);
     request.onblocked = resolve;
   });
+}
+
+async function closeOwnConnection() {
+  if (dbPromise) {
+    (await dbPromise).close();               // or deleting the database would be blocked
+    dbPromise = null;
+  }
+}
+
+// Replaces the demo database with new contents: settings as { key: value }, entries as a list.
+export async function writeDemoDatabase(settings, entries) {
+  if (isDemoMode()) await closeOwnConnection();
+  await deleteDatabase(DEMO_DB);
   const db = await openDatabase(DEMO_DB);
   await new Promise((resolve, reject) => {
     const tx = db.transaction(['entries', 'settings'], 'readwrite');
@@ -102,4 +110,16 @@ export async function writeDemoDatabase(settings, entries) {
     tx.onabort = () => reject(tx.error);
   });
   db.close();
+}
+
+// Removes everything this app stored on the phone (used by "Forgot PIN").
+export async function eraseAllLocalData() {
+  await closeOwnConnection();
+  await deleteDatabase(REAL_DB);
+  await deleteDatabase(DEMO_DB);
+  try {
+    localStorage.clear();
+  } catch {
+    // nothing else to clear
+  }
 }

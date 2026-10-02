@@ -1,14 +1,17 @@
-// Diary – start-up: screens, tab bar, offline support, loading the questions.
+// Diary – start-up: screens, tab bar, offline support, PIN lock, loading the questions, backup.
 import { logicalDate } from './logic.js';
-import { dbGet, isDemoMode } from './db.js';
+import { dbGet, dbGetAll, isDemoMode } from './db.js';
 import { initConfig, refreshConfig } from './config.js';
+import { syncNow } from './sync.js';
+import { initLock } from './lock.js';
 import { dayScreen } from './day.js';
 import { packScreen } from './form.js';
 import { calendarScreen } from './calendar.js';
+import { trendsScreen } from './trends.js';
 import { settingsScreen } from './settings.js';
 
-const APP_VERSION = '0.4.0';
-const AUTO_REFRESH_MINUTES = 10;   // re-check config.json at most this often when the app comes back
+const APP_VERSION = '1.0.0';
+const AUTO_REFRESH_MINUTES = 10;   // re-check config.json and back up at most this often when the app comes back
 
 // Screens by address: #/today, #/day/<date>, #/pack/<pack id>/<date>, #/calendar[/<YYYY-MM>],
 // #/trends, #/settings
@@ -19,11 +22,7 @@ const routes = {
   day: (date) => dayScreen(date),
   pack: (packId, date) => packScreen(packId, date),
   calendar: (month) => calendarScreen(month),
-  trends: async () => ({
-    title: 'Trends',
-    subtitle: '',
-    html: '<section class="card"><p>Charts of your answers over time will appear here.</p></section>'
-  }),
+  trends: () => trendsScreen(),
   settings: () => settingsScreen({ appVersion: APP_VERSION, offlineStatus: offlineStatus() })
 };
 
@@ -81,30 +80,40 @@ async function render() {
   if (screen.mount) cleanup = screen.mount(view, render) || null;
 }
 
-// Fetch config.json from the private repo (quietly; problems are shown in Settings).
-let lastAutoRefresh = 0;
-async function autoRefreshConfig() {
+// Fetch config.json and back up (quietly; problems are shown in Settings and on Today).
+let lastRefresh = 0;
+async function refreshInBackground() {
+  lastRefresh = Date.now();
   const github = await dbGet('settings', 'github');
-  if (!github || !github.token) return;
-  lastAutoRefresh = Date.now();
-  try {
-    const changed = await refreshConfig(github);
-    if (changed && currentScreen === 'today') render();
-  } catch {
-    // Offline or a problem with config.json: the saved copy stays in use.
+  if (github && github.token && !isDemoMode()) {
+    try {
+      const changed = await refreshConfig(github);
+      if (changed && currentScreen === 'today') render();
+    } catch {
+      // Offline or a problem with config.json: the saved copy stays in use.
+    }
   }
+  const before = await countEntries();
+  await syncNow();
+  if ((await countEntries()) !== before && (currentScreen === 'today' || currentScreen === 'calendar')) render();
+}
+
+async function countEntries() {
+  return (await dbGetAll('entries')).length;
 }
 
 window.addEventListener('hashchange', render);
+window.addEventListener('online', () => { syncNow(); });
 
-// The app can sit in the background for days: when it comes back, refresh the date and the questions.
+// The app can sit in the background for days: when it comes back, refresh the date, questions and backup.
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
   if (logicalDate() !== shownDate) render();
-  if (Date.now() - lastAutoRefresh > AUTO_REFRESH_MINUTES * 60 * 1000) autoRefreshConfig();
+  if (Date.now() - lastRefresh > AUTO_REFRESH_MINUTES * 60 * 1000) refreshInBackground();
 });
 
 async function start() {
+  initLock();                             // covers the app until the PIN is entered (if a PIN is set)
   // The demo diary gets its own header colour and a label, so it is never mistaken for real data.
   if (isDemoMode()) {
     document.body.classList.add('demo');
@@ -121,7 +130,7 @@ async function start() {
     console.error('Could not read the saved config:', err);
   }
   await render();
-  autoRefreshConfig();
+  refreshInBackground();
 }
 
 start();

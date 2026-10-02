@@ -200,6 +200,18 @@ export function computeScore(score, values) {
   return total * (score.multiply || 1);
 }
 
+// Time asleep in minutes from the sleep diary answers, or null:
+// (final awakening − time trying to sleep) − time to fall asleep − time awake during the night.
+export function sleepMinutes(answers) {
+  const start = answers.sleep_try || answers.sleep_bed;
+  if (!start || !answers.sleep_final) return null;
+  const toMinutes = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+  let span = toMinutes(answers.sleep_final) - toMinutes(start);
+  if (span <= 0) span += 24 * 60;
+  const asleep = span - (answers.sleep_latency || 0) - (answers.sleep_waso || 0);
+  return asleep > 0 ? asleep : null;
+}
+
 // ---------- Small helpers ----------
 
 // Makes text safe to put inside HTML.
