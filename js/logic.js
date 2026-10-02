@@ -1,4 +1,4 @@
-// Diary – shared logic. For now: dates and the 04:00 day boundary.
+// Diary – shared logic: dates, the 04:00 day boundary, small helpers.
 
 // A new diary day starts at 04:00: anything entered before 4 am counts for the previous day.
 export const DAY_START_HOUR = 4;
@@ -24,4 +24,24 @@ export function formatLongDate(isoDate) {
     day: 'numeric',
     month: 'long'
   });
+}
+
+// ISO timestamp -> "2 Oct, 19:42"
+export function formatDateTime(isoTimestamp) {
+  return new Date(isoTimestamp).toLocaleString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+// Makes text safe to put inside HTML.
+export function escapeHtml(text) {
+  return String(text)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }

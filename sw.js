@@ -3,7 +3,7 @@
 // Strategy: always try the network first (so new versions arrive as soon as you're online),
 // and fall back to the stored copy when there is no connection.
 
-const CACHE = 'diary-v1';
+const CACHE = 'diary-v2';
 
 const APP_FILES = [
   './',
@@ -12,6 +12,10 @@ const APP_FILES = [
   './css/app.css',
   './js/app.js',
   './js/logic.js',
+  './js/db.js',
+  './js/sync.js',
+  './js/config.js',
+  './js/settings.js',
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png'
