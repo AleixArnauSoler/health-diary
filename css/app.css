@@ -1,0 +1,166 @@
+/* Diary – base styles.
+   All colours are defined once in :root; dark mode swaps them. */
+
+:root {
+  --brand: #3a2440;          /* header band (status bar text is white, so this must stay dark) */
+  --on-brand: #ffffff;
+  --on-brand-soft: rgba(255, 255, 255, 0.72);
+  --bg: #f4f2f6;
+  --card: #ffffff;
+  --text: #1d1720;
+  --muted: #6e6475;
+  --line: rgba(58, 36, 64, 0.14);
+  --accent: #a3366a;
+  --bar: rgba(249, 247, 251, 0.86);
+
+  --serif: ui-serif, "New York", Georgia, serif;
+  --sans: system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --tabbar-height: 52px;
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --brand: #241628;
+    --on-brand: #f6eef8;
+    --on-brand-soft: rgba(246, 238, 248, 0.7);
+    --bg: #000000;
+    --card: #1b161e;
+    --text: #f3eef5;
+    --muted: #a79ead;
+    --line: rgba(255, 255, 255, 0.12);
+    --accent: #e482ae;
+    --bar: rgba(20, 16, 23, 0.86);
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 17px/1.35 var(--sans);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  touch-action: manipulation;            /* no double-tap zoom */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The app fills the screen; only the middle part scrolls, like a native app. */
+.app {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header – runs up under the status bar */
+.topbar {
+  flex: none;
+  background: var(--brand);
+  color: var(--on-brand);
+  padding: calc(env(safe-area-inset-top) + 14px)
+           calc(env(safe-area-inset-right) + 20px)
+           16px
+           calc(env(safe-area-inset-left) + 20px);
+}
+
+.topbar h1 {
+  margin: 0;
+  font: 600 34px/1.1 var(--serif);
+  letter-spacing: 0.01em;
+}
+
+.topbar p {
+  margin: 4px 0 0;
+  min-height: 1.35em;                    /* keeps the header height steady between tabs */
+  color: var(--on-brand-soft);
+  font-size: 15px;
+}
+
+/* Scrolling content */
+main {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px
+           calc(env(safe-area-inset-right) + 16px)
+           calc(var(--tabbar-height) + env(safe-area-inset-bottom) + 24px)
+           calc(env(safe-area-inset-left) + 16px);
+}
+
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 0 16px;
+  margin: 0 0 16px;
+}
+
+.card p {
+  margin: 0;
+  padding: 14px 0;
+  color: var(--muted);
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 0.5px solid var(--line);
+}
+
+.row:last-child { border-bottom: 0; }
+.row span:last-child { color: var(--muted); text-align: right; }
+
+/* Tab bar – floats over the content so it shows through, as on iOS */
+.tabbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background: var(--bar);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-top: 0.5px solid var(--line);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.tabbar a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: var(--tabbar-height);
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 10.5px;
+  font-weight: 500;
+}
+
+.tabbar svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tabbar a[aria-current="page"] { color: var(--accent); }
+
+.tabbar a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -4px;
+  border-radius: 8px;
+}
