@@ -1,31 +1,20 @@
 // Diary – start-up: screens, tab bar, offline support, loading the questions.
-import { logicalDate, formatLongDate, escapeHtml as esc } from './logic.js';
+import { logicalDate } from './logic.js';
 import { dbGet } from './db.js';
-import { initConfig, getConfig, refreshConfig } from './config.js';
+import { initConfig, refreshConfig } from './config.js';
+import { dayScreen } from './day.js';
+import { packScreen } from './form.js';
 import { settingsScreen } from './settings.js';
 
-const APP_VERSION = '0.2.0';
+const APP_VERSION = '0.3.0';
 const AUTO_REFRESH_MINUTES = 10;   // re-check config.json at most this often when the app comes back
 
-// Each screen returns its header text, its content and (optionally) a mount() that wires up buttons.
-const screens = {
-  today: async () => {
-    const title = 'Today';
-    const subtitle = formatLongDate(logicalDate());
-    const config = getConfig();
-    if (!config) {
-      return {
-        title, subtitle,
-        html: `<section class="card"><p>Connect your private data repo in Settings to load your questions.</p></section>
-               <a class="button" href="#/settings">Open Settings</a>`
-      };
-    }
-    const rows = config.packs
-      .filter((pack) => !pack.retired)
-      .map((pack) => `<div class="row"><span>${esc(pack.title)}</span><span>${scheduleText(pack)}</span></div>`)
-      .join('');
-    return { title, subtitle, html: `<h2 class="section">Your packs</h2><section class="card">${rows}</section>` };
-  },
+// Screens by address: #/today, #/pack/<pack id>/<date>, #/calendar, #/trends, #/settings
+// Each returns { title, subtitle, html, back?, tab?, mount? }. mount() wires up buttons and may
+// return a clean-up function that runs before the next screen opens (used to save answers).
+const routes = {
+  today: () => dayScreen(logicalDate()),
+  pack: (packId, date) => packScreen(packId, date),
   calendar: async () => ({
     title: 'Calendar',
     subtitle: '',
@@ -39,43 +28,58 @@ const screens = {
   settings: () => settingsScreen({ appVersion: APP_VERSION, offlineStatus: offlineStatus() })
 };
 
-function scheduleText(pack) {
-  if (pack.enabled === false) return 'Off';
-  const days = pack.schedule.everyDays;
-  return days === 1 ? 'Daily' : `Every ${days} days`;
-}
-
 function offlineStatus() {
   if (!('serviceWorker' in navigator)) return 'Not supported';
   return navigator.serviceWorker.controller ? 'Ready' : 'Not ready yet';
 }
 
+function parseAddress() {
+  const parts = location.hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent);
+  const name = routes[parts[0]] ? parts[0] : 'today';
+  return { name, args: parts.slice(1) };
+}
+
 let currentScreen = 'today';
 let shownDate = logicalDate();
 let renderCount = 0;
+let cleanup = null;
 
-// Show the screen named in the address, e.g. #/calendar
 async function render() {
   const thisRender = ++renderCount;
-  const name = location.hash.replace(/^#\//, '');
-  const key = screens[name] ? name : 'today';
-  const screen = await screens[key]();
+  if (cleanup) {                          // e.g. save the answers of the form we are leaving
+    const finish = cleanup;
+    cleanup = null;
+    try { await finish(); } catch (err) { console.error(err); }
+  }
+
+  const { name, args } = parseAddress();
+  const screen = await routes[name](...args);
   if (thisRender !== renderCount) return;   // the user already tapped somewhere else
 
-  currentScreen = key;
+  currentScreen = name;
   shownDate = logicalDate();
   document.getElementById('title').textContent = screen.title;
   document.getElementById('subtitle').textContent = screen.subtitle;
+
+  const back = document.getElementById('back');
+  if (screen.back) {
+    back.href = screen.back.href;
+    back.textContent = `‹ ${screen.back.label}`;
+    back.hidden = false;
+  } else {
+    back.hidden = true;
+  }
 
   const view = document.getElementById('view');
   view.innerHTML = screen.html;
   view.scrollTop = 0;
 
+  const tab = screen.tab || name;
   for (const link of document.querySelectorAll('.tabbar a')) {
-    if (link.dataset.tab === currentScreen) link.setAttribute('aria-current', 'page');
+    if (link.dataset.tab === tab) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   }
-  if (screen.mount) screen.mount(view, render);
+  if (screen.mount) cleanup = screen.mount(view, render) || null;
 }
 
 // Fetch config.json from the private repo (quietly; problems are shown in Settings).

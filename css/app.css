@@ -14,6 +14,9 @@
   --on-accent: #ffffff;
   --danger: #b3261e;
   --ok: #2e7d57;
+  --accent-soft: rgba(163, 54, 106, 0.1);
+  --alert-bg: #fdecef;
+  --field: #f4f2f6;
   --bar: rgba(249, 247, 251, 0.86);
 
   --serif: ui-serif, "New York", Georgia, serif;
@@ -37,6 +40,9 @@
     --on-accent: #2a1020;
     --danger: #ff8a80;
     --ok: #6fd3a0;
+    --accent-soft: rgba(228, 130, 174, 0.18);
+    --alert-bg: #3a1a22;
+    --field: #2a2330;
     --bar: rgba(20, 16, 23, 0.86);
   }
 }
@@ -74,6 +80,17 @@ body {
            16px
            calc(env(safe-area-inset-left) + 20px);
 }
+
+.back {
+  display: inline-block;
+  margin: -4px 0 6px -2px;
+  padding: 4px 2px;
+  color: var(--on-brand-soft);
+  font-size: 17px;
+  text-decoration: none;
+}
+
+.back[hidden] { display: none; }
 
 .topbar h1 {
   margin: 0;
@@ -200,6 +217,194 @@ main {
 .status:empty { display: none; }
 .status.error { color: var(--danger); }
 .status.ok { color: var(--ok); }
+
+/* Section heading with a count on the right */
+.section.split {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.section.split span:last-child { font-weight: 400; }
+
+/* Rows that open another screen */
+.row.link {
+  justify-content: flex-start;
+  align-items: center;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.row.link span:first-child { flex: 1; }
+.row.link::after { content: "›"; margin-left: 10px; color: var(--muted); font-size: 22px; line-height: 1; }
+.row .state.done { color: var(--ok); }
+.row .state.partial { color: var(--accent); }
+
+/* Pack form */
+.pack-help {
+  margin: 0 4px 12px;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.q {
+  margin: 0 0 12px;
+  padding: 14px 16px 16px;
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.q[hidden] { display: none; }
+
+.q-label {
+  margin: 0;
+  font: 600 17px/1.3 var(--sans);
+}
+
+.q-help {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.q-note {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.opts { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+.opt, .chip {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  font: 16px/1.3 var(--sans);
+  cursor: pointer;
+}
+
+.opt {
+  padding: 10px 14px;
+  border-radius: 10px;
+  text-align: left;
+}
+
+.seg .opt { text-align: center; }
+
+.opt[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+
+.chip {
+  padding: 8px 14px;
+  border-radius: 22px;
+  font-size: 15px;
+}
+
+.chip[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.opt:focus-visible, .chip:focus-visible, .clear:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* 0–10 scales: one row of numbers */
+.scale {
+  display: grid;
+  grid-template-columns: repeat(var(--count), 1fr);
+  gap: 3px;
+  margin-top: 12px;
+}
+
+.scale .opt {
+  padding: 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.scale .opt[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.scale-ends {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.scale-ends span:last-child { text-align: right; }
+
+/* Number, time and text fields */
+.q input, .q textarea {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--field);
+  color: var(--text);
+  font: 17px/1.3 var(--sans);
+}
+
+.q input:focus, .q textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.q textarea { width: 100%; min-height: 64px; resize: none; }
+.q input.invalid { border-color: var(--danger); }
+
+.num, .timebox { display: flex; align-items: center; gap: 12px; }
+.num input { width: 7.5em; }
+.num span { margin-top: 12px; color: var(--muted); }
+.timebox input { min-width: 8em; min-height: 46px; }
+
+.clear {
+  margin-top: 12px;
+  padding: 10px 6px;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: 16px var(--sans);
+  cursor: pointer;
+}
+
+.clear[hidden] { display: none; }
+
+/* Score, alerts and sources at the end of a pack */
+.score {
+  margin: 4px 4px 16px;
+  font-weight: 600;
+}
+
+.alert {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--danger);
+  border-radius: 12px;
+  background: var(--alert-bg);
+  color: var(--text);
+}
+
+.alert[hidden] { display: none; }
+
+.source {
+  margin: 8px 4px 0;
+  font-size: 12px;
+  color: var(--muted);
+}
 
 /* Tab bar – floats over the content so it shows through, as on iOS */
 .tabbar {
