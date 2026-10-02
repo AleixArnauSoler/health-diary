@@ -1,8 +1,9 @@
 // Diary – Settings screen.
-import { dbGet, dbPut } from './db.js';
+import { dbGet, dbPut, isDemoMode, setDemoMode, writeDemoDatabase } from './db.js';
 import { checkRepo } from './sync.js';
 import { getConfig, getConfigInfo, refreshConfig, configSummary } from './config.js';
-import { escapeHtml as esc, formatDateTime } from './logic.js';
+import { buildDemoEntries } from './demo.js';
+import { escapeHtml as esc, formatDateTime, logicalDate } from './logic.js';
 
 const DEFAULT_REPO = 'health-diary-data';
 
@@ -32,8 +33,11 @@ export async function settingsScreen({ appVersion, offlineStatus }) {
     ? `<p class="status error" id="config-status" role="status">${esc(info.lastError)}</p>`
     : '<p class="status" id="config-status" role="status"></p>';
 
-  const html = `
-    <h2 class="section">Private data repo</h2>
+  const demo = isDemoMode();
+  const githubSection = demo
+    ? `<h2 class="section">Private data repo</h2>
+       <section class="card"><p>The demo diary is not connected to GitHub, so nothing from it is uploaded.</p></section>`
+    : `<h2 class="section">Private data repo</h2>
     <form id="github-form" autocomplete="off">
       <div class="card">
         <label class="field">
@@ -54,12 +58,29 @@ export async function settingsScreen({ appVersion, offlineStatus }) {
       </div>
       <button class="button" type="submit">Connect</button>
     </form>
-    ${connection}
+    ${connection}`;
+
+  const demoSection = demo
+    ? `<h2 class="section">Demo diary</h2>
+       <section class="card"><p>You are looking at simulated data. Your real diary is unchanged.</p></section>
+       <button class="button" id="demo-leave" type="button">Back to my diary</button>
+       <button class="button secondary" id="demo-build" type="button">Rebuild demo data</button>
+       <p class="status" id="demo-status" role="status"></p>`
+    : `<h2 class="section">Demo diary</h2>
+       <section class="card"><p>Try the calendar and charts with about 3 months of simulated answers.
+         It is kept apart from your real diary and never uploaded.</p></section>
+       <button class="button secondary" id="demo-build" type="button">Open demo diary</button>
+       <p class="status" id="demo-status" role="status"></p>`;
+
+  const html = `
+    ${githubSection}
 
     <h2 class="section">Questions</h2>
     <section class="card">${questionRows}</section>
-    <button class="button secondary" id="reload-config" type="button">Reload questions</button>
+    ${demo ? '' : '<button class="button secondary" id="reload-config" type="button">Reload questions</button>'}
     ${configStatus}
+
+    ${demoSection}
 
     <h2 class="section">App</h2>
     <section class="card">
@@ -76,7 +97,9 @@ function showStatus(element, text, kind = '') {
 }
 
 function mount(view, rerender) {
+  mountDemo(view);
   const form = view.querySelector('#github-form');
+  if (!form) return;                         // demo diary: no GitHub connection
   const connectButton = form.querySelector('button');
   const githubStatus = view.querySelector('#github-status');
   const reloadButton = view.querySelector('#reload-config');
@@ -133,4 +156,39 @@ function mount(view, rerender) {
     }
     rerender();
   });
+}
+
+function mountDemo(view) {
+  const build = view.querySelector('#demo-build');
+  const leave = view.querySelector('#demo-leave');
+  const status = view.querySelector('#demo-status');
+
+  build.addEventListener('click', async () => {
+    const config = getConfig();
+    if (!config) {
+      showStatus(status, 'Load your questions first (connect the data repo above).', 'error');
+      return;
+    }
+    build.disabled = true;
+    showStatus(status, 'Building the demo diary…');
+    try {
+      const info = getConfigInfo();
+      const entries = buildDemoEntries(config, info.sha, logicalDate());
+      await writeDemoDatabase({ config: { data: config, sha: info.sha, loadedAt: info.loadedAt } }, entries);
+      setDemoMode(true);
+      location.hash = '#/calendar';
+      location.reload();
+    } catch (err) {
+      build.disabled = false;
+      showStatus(status, `Could not build the demo diary: ${err.message}`, 'error');
+    }
+  });
+
+  if (leave) {
+    leave.addEventListener('click', () => {
+      setDemoMode(false);
+      location.hash = '#/today';
+      location.reload();
+    });
+  }
 }

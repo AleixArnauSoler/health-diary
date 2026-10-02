@@ -16,7 +16,7 @@ export async function packScreen(packId, date) {
   const base = {
     subtitle: validDate ? formatLongDate(date) : '',
     back: { href: backHref, label: !validDate || date === today ? 'Today' : formatShortDate(date) },
-    tab: 'today'
+    tab: !validDate || date === today ? 'today' : 'calendar'
   };
   const message = (title, text) => ({ ...base, title, html: `<section class="card"><p>${esc(text)}</p></section>` });
 
@@ -28,6 +28,10 @@ export async function packScreen(packId, date) {
 
   const entries = await dbGetAll('entries');
   const answersFor = makeAnswerLookup(entries);
+  const entry = entries.find((e) => e.date === date);
+  const lastSaved = entry
+    ? pack.questions.map((q) => entry.answers[q.id] && entry.answers[q.id].modified_at).filter(Boolean).sort().pop()
+    : null;
   const earlierDates = entries.map((e) => e.date).filter((d) => d < date).sort().reverse();
   const saved = answersFor(date);
 
@@ -53,7 +57,7 @@ export async function packScreen(packId, date) {
     ${pack.score ? '<p class="score" id="score" hidden></p>' : ''}
     ${pack.alert ? `<div class="alert" id="alert" role="alert" hidden>${esc(pack.alert.text)}</div>` : ''}
     <a class="button" href="${backHref}">Done</a>
-    <p class="status" id="save-status">Answers are saved as you go.</p>
+    <p class="status" id="save-status">${lastSaved ? `Saved ${savedWhen(lastSaved)}.` : 'Answers are saved as you go.'}</p>
     ${pack.source ? `<p class="source">${esc(pack.source)}</p>` : ''}
   </div>`;
 
@@ -63,6 +67,14 @@ export async function packScreen(packId, date) {
     html,
     mount: (view) => mountForm(view, pack, date, values, answersFor)
   };
+}
+
+// "at 21:14" today, "on 2 Oct at 21:14" otherwise.
+function savedWhen(timestamp) {
+  const when = new Date(timestamp);
+  const time = when.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  if (when.toDateString() === new Date().toDateString()) return `at ${time}`;
+  return `on ${when.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} at ${time}`;
 }
 
 // ---------- HTML for one question ----------
@@ -174,8 +186,7 @@ function mountForm(view, pack, date, values, answersFor) {
       .then(() => writePack(pack, date, snapshot, answersFor))
       .then((changed) => {
         if (!changed) return;
-        const time = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-        statusEl.textContent = `Saved at ${time}.`;
+        statusEl.textContent = `Saved ${savedWhen(new Date().toISOString())}.`;
         statusEl.className = 'status';
       })
       .catch((err) => {

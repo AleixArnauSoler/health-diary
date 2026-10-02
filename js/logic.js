@@ -166,6 +166,27 @@ export function dueInfo(pack, date, entryDates, answersFor) {
   return { due: next <= date, next };
 }
 
+// The packs for one day: { due: [{pack, status}], later: [{pack, status, next}] }.
+// "later" = packs that repeat every N days and are not due yet on this date.
+export function packsForDay(config, date, entryDates, answersFor) {
+  const lookup = (id, day) => answersFor(addDays(date, day || 0))[id];
+  const due = [];
+  const later = [];
+  for (const pack of config.packs) {
+    if (pack.retired || pack.enabled === false) continue;
+    if (!evaluate(pack.showIf, lookup)) continue;
+    const status = packStatus(pack, date, answersFor);
+    if (status !== 'new') {
+      due.push({ pack, status });
+      continue;
+    }
+    const info = dueInfo(pack, date, entryDates, answersFor);
+    if (info.due) due.push({ pack, status });
+    else later.push({ pack, status, next: info.next });
+  }
+  return { due, later };
+}
+
 // ---------- Scores ----------
 
 // Sum of the score items (with reversed items and multiplier), or null until all items are answered.

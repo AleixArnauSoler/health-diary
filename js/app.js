@@ -1,25 +1,24 @@
 // Diary – start-up: screens, tab bar, offline support, loading the questions.
 import { logicalDate } from './logic.js';
-import { dbGet } from './db.js';
+import { dbGet, isDemoMode } from './db.js';
 import { initConfig, refreshConfig } from './config.js';
 import { dayScreen } from './day.js';
 import { packScreen } from './form.js';
+import { calendarScreen } from './calendar.js';
 import { settingsScreen } from './settings.js';
 
-const APP_VERSION = '0.3.0';
+const APP_VERSION = '0.4.0';
 const AUTO_REFRESH_MINUTES = 10;   // re-check config.json at most this often when the app comes back
 
-// Screens by address: #/today, #/pack/<pack id>/<date>, #/calendar, #/trends, #/settings
+// Screens by address: #/today, #/day/<date>, #/pack/<pack id>/<date>, #/calendar[/<YYYY-MM>],
+// #/trends, #/settings
 // Each returns { title, subtitle, html, back?, tab?, mount? }. mount() wires up buttons and may
 // return a clean-up function that runs before the next screen opens (used to save answers).
 const routes = {
   today: () => dayScreen(logicalDate()),
+  day: (date) => dayScreen(date),
   pack: (packId, date) => packScreen(packId, date),
-  calendar: async () => ({
-    title: 'Calendar',
-    subtitle: '',
-    html: '<section class="card"><p>A month view of your entries and cycle will appear here.</p></section>'
-  }),
+  calendar: (month) => calendarScreen(month),
   trends: async () => ({
     title: 'Trends',
     subtitle: '',
@@ -106,6 +105,11 @@ document.addEventListener('visibilitychange', () => {
 });
 
 async function start() {
+  // The demo diary gets its own header colour and a label, so it is never mistaken for real data.
+  if (isDemoMode()) {
+    document.body.classList.add('demo');
+    document.getElementById('mode').hidden = false;
+  }
   // Offline support: sw.js keeps a copy of the app on the phone.
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
