@@ -1,0 +1,558 @@
+{
+  "_readme": [
+    "Questionnaire config for the Diary app. Edit it here; the app picks up changes the next time it opens.",
+    "Never change or reuse an id. Increase 'version' when a question's meaning, options or scale change (not for typo fixes).",
+    "To stop asking a question, add \"retired\": true instead of deleting it. Same for packs.",
+    "Option 'value's are what gets stored: keep them stable. Labels can change freely.",
+    "showIf: {\"q\": id, op: value} with op = eq, ne, in, has, gte, lte or answered. Add \"day\": -1 to look at yesterday. Combine with all / any / not.",
+    "schedule.everyDays: 1 = daily; 14 = due 14 days after the pack was last completed."
+  ],
+  "schema": 1,
+  "packs": [
+    {
+      "id": "cycle",
+      "version": 1,
+      "title": "Cycle",
+      "schedule": { "everyDays": 1 },
+      "questions": [
+        {
+          "id": "period_flow", "version": 1, "type": "single",
+          "label": "Bleeding today",
+          "help": "Spotting = a few drops, no pad or tampon needed.",
+          "options": [
+            { "value": "none", "label": "None" },
+            { "value": "spotting", "label": "Spotting" },
+            { "value": "light", "label": "Light" },
+            { "value": "medium", "label": "Medium" },
+            { "value": "heavy", "label": "Heavy" }
+          ]
+        },
+        {
+          "id": "discharge", "version": 1, "type": "single",
+          "label": "Discharge",
+          "options": [
+            { "value": "none", "label": "None / dry" },
+            { "value": "sticky", "label": "Sticky" },
+            { "value": "creamy", "label": "Creamy" },
+            { "value": "eggwhite", "label": "Egg white (clear, stretchy)" },
+            { "value": "watery", "label": "Watery" },
+            { "value": "unusual", "label": "Unusual (colour or smell)" }
+          ]
+        },
+        {
+          "id": "ovulation_test", "version": 1, "type": "single",
+          "label": "Ovulation test",
+          "options": [
+            { "value": "not_taken", "label": "Not taken" },
+            { "value": "negative", "label": "Negative" },
+            { "value": "positive", "label": "Positive" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vulva",
+      "version": 1,
+      "title": "Sex & vulva",
+      "help": "Only record what you notice in everyday life anyway – no extra checking.",
+      "schedule": { "everyDays": 1 },
+      "questions": [
+        { "id": "sex", "version": 1, "type": "yesno", "label": "Sex today?" },
+        {
+          "id": "sex_symptoms", "version": 1, "type": "single",
+          "label": "Symptoms during sex",
+          "showIf": { "q": "sex", "eq": true },
+          "options": [
+            { "value": 0, "label": "0 · nothing" },
+            { "value": 1, "label": "1 · mild / brief" },
+            { "value": 2, "label": "2 · clear" },
+            { "value": 3, "label": "3 · strong" }
+          ]
+        },
+        {
+          "id": "condom", "version": 1, "type": "single",
+          "label": "Condom",
+          "showIf": { "q": "sex", "eq": true },
+          "options": [
+            { "value": "none", "label": "No condom" },
+            { "value": "latex", "label": "Latex" },
+            { "value": "polyisoprene", "label": "Latex-free – polyisoprene" },
+            { "value": "polyurethane", "label": "Latex-free – polyurethane" },
+            { "value": "other", "label": "Other" }
+          ]
+        },
+        {
+          "id": "lube", "version": 1, "type": "single",
+          "label": "Lubricant",
+          "showIf": { "q": "sex", "eq": true },
+          "options": [
+            { "value": "none", "label": "None" },
+            { "value": "water", "label": "Water-based" },
+            { "value": "silicone", "label": "Silicone-based" },
+            { "value": "oil", "label": "Oil-based" },
+            { "value": "other", "label": "Other" }
+          ]
+        },
+        {
+          "id": "fissure", "version": 1, "type": "single",
+          "label": "Tearing / soreness",
+          "options": [
+            { "value": 0, "label": "0 · nothing" },
+            { "value": 1, "label": "1 · slight irritation, scratchy feeling" },
+            { "value": 2, "label": "2 · clear irritation or small tear" },
+            { "value": 3, "label": "3 · larger injury or bleeding" }
+          ]
+        },
+        {
+          "id": "itch", "version": 1, "type": "single",
+          "label": "Itching / stinging",
+          "options": [
+            { "value": 0, "label": "0 · nothing" },
+            { "value": 1, "label": "1 · occasional / mild" },
+            { "value": 2, "label": "2 · repeated / clear" },
+            { "value": 3, "label": "3 · strong" }
+          ]
+        },
+        {
+          "id": "nextday", "version": 1, "type": "single",
+          "label": "Symptoms today after yesterday's sex",
+          "showIf": { "q": "sex", "day": -1, "eq": true },
+          "options": [
+            { "value": 0, "label": "0 · nothing" },
+            { "value": 1, "label": "1 · mild, everyday life normal" },
+            { "value": 2, "label": "2 · clear" },
+            { "value": 3, "label": "3 · strong" }
+          ]
+        },
+        { "id": "oekolp", "version": 1, "type": "yesno", "label": "OeKolp used today?" },
+        {
+          "id": "oekolp_amount", "version": 1, "type": "single",
+          "label": "OeKolp amount",
+          "showIf": { "q": "oekolp", "eq": true },
+          "options": [
+            { "value": "thin", "label": "Thin" },
+            { "value": "normal", "label": "Normal" },
+            { "value": "generous", "label": "Generous" }
+          ]
+        },
+        {
+          "id": "shave_since", "version": 1, "type": "single",
+          "label": "Last shave",
+          "options": [
+            { "value": "no", "label": "Not shaving" },
+            { "value": "lt24h", "label": "Less than 24 h ago" },
+            { "value": "24-48h", "label": "24–48 h ago" },
+            { "value": "3-7d", "label": "3–7 days ago" },
+            { "value": "gt7d", "label": "More than 7 days ago" }
+          ]
+        },
+        { "id": "probiotics", "version": 1, "type": "yesno", "label": "Probiotics today?" },
+        {
+          "id": "test_factor", "version": 1, "type": "single",
+          "label": "Active test factor",
+          "help": "Change only one factor at a time.",
+          "prefill": "last",
+          "options": [
+            { "value": "none", "label": "No test" },
+            { "value": "condom", "label": "Condom" },
+            { "value": "lube", "label": "Lubricant" },
+            { "value": "shaving", "label": "Shaving" },
+            { "value": "oekolp", "label": "OeKolp schedule" },
+            { "value": "barrier", "label": "Barrier ointment" },
+            { "value": "probiotics", "label": "Probiotics" },
+            { "value": "interval", "label": "Interval between sex" },
+            { "value": "manual", "label": "Manual touch" },
+            { "value": "other", "label": "Other" }
+          ]
+        },
+        {
+          "id": "test_variant", "version": 1, "type": "text",
+          "label": "Test variant",
+          "prefill": "last",
+          "showIf": { "q": "test_factor", "ne": "none" }
+        }
+      ]
+    },
+    {
+      "id": "pain",
+      "version": 1,
+      "title": "Pain & reactions",
+      "schedule": { "everyDays": 1 },
+      "alert": {
+        "if": { "any": [
+          { "q": "reaction_symptoms", "has": "breathing" },
+          { "q": "reaction_symptoms", "has": "faint" }
+        ] },
+        "text": "Breathing problems or feeling faint after eating can be a severe allergic reaction. If it is happening now, use your adrenaline auto-injector if you have one and call 112."
+      },
+      "questions": [
+        { "id": "pain_any", "version": 1, "type": "yesno", "label": "Any pain today?" },
+        {
+          "id": "pain_sites", "version": 1, "type": "multi",
+          "label": "Where?",
+          "showIf": { "q": "pain_any", "eq": true },
+          "options": [
+            { "value": "head", "label": "Head" },
+            { "value": "breasts", "label": "Breasts" },
+            { "value": "stomach", "label": "Stomach / upper abdomen" },
+            { "value": "pelvis", "label": "Lower abdomen / pelvis (incl. cramps)" },
+            { "value": "vulva", "label": "Vulva / vagina" },
+            { "value": "back", "label": "Back" },
+            { "value": "joints", "label": "Joints / muscles" },
+            { "value": "other", "label": "Other" }
+          ]
+        },
+        { "id": "pain_head", "version": 1, "type": "scale", "label": "Head – worst pain today", "min": 0, "max": 10, "step": 1, "minLabel": "No pain", "maxLabel": "Worst imaginable", "showIf": { "q": "pain_sites", "has": "head" } },
+        { "id": "pain_breasts", "version": 1, "type": "scale", "label": "Breasts – worst pain today", "min": 0, "max": 10, "step": 1, "minLabel": "No pain", "maxLabel": "Worst imaginable", "showIf": { "q": "pain_sites", "has": "breasts" } },
+        { "id": "pain_stomach", "version": 1, "type": "scale", "label": "Stomach – worst pain today", "min": 0, "max": 10, "step": 1, "minLabel": "No pain", "maxLabel": "Worst imaginable", "showIf": { "q": "pain_sites", "has": "stomach" } },
+        { "id": "pain_pelvis", "version": 1, "type": "scale", "label": "Lower abdomen / pelvis – worst pain today", "min": 0, "max": 10, "step": 1, "minLabel": "No pain", "maxLabel": "Worst imaginable", "showIf": { "q": "pain_sites", "has": "pelvis" } },
+        { "id": "pain_vulva", "version": 1, "type": "scale", "label": "Vulva / vagina – worst pain today", "min": 0, "max": 10, "step": 1, "minLabel": "No pain", "maxLabel": "Worst imaginable", "showIf": { "q": "pain_sites", "has": "vulva" } },
+        { "id": "pain_back", "version": 1, "type": "scale", "label": "Back – worst pain today", "min": 0, "max": 10, "step": 1, "minLabel": "No pain", "maxLabel": "Worst imaginable", "showIf": { "q": "pain_sites", "has": "back" } },
+        { "id": "pain_joints", "version": 1, "type": "scale", "label": "Joints / muscles – worst pain today", "min": 0, "max": 10, "step": 1, "minLabel": "No pain", "maxLabel": "Worst imaginable", "showIf": { "q": "pain_sites", "has": "joints" } },
+        { "id": "pain_other", "version": 1, "type": "scale", "label": "Other – worst pain today", "min": 0, "max": 10, "step": 1, "minLabel": "No pain", "maxLabel": "Worst imaginable", "showIf": { "q": "pain_sites", "has": "other" } },
+        { "id": "pain_other_where", "version": 1, "type": "text", "label": "Where (other)?", "showIf": { "q": "pain_sites", "has": "other" } },
+        {
+          "id": "stomach_onset", "version": 1, "type": "single",
+          "label": "When did the stomach pain start?",
+          "showIf": { "q": "pain_sites", "has": "stomach" },
+          "options": [
+            { "value": "lt30min", "label": "Within 30 min of eating" },
+            { "value": "30min-2h", "label": "30 min – 2 h after eating" },
+            { "value": "gt2h", "label": "More than 2 h after eating" },
+            { "value": "unrelated", "label": "Not related to eating" },
+            { "value": "unsure", "label": "Not sure" }
+          ]
+        },
+        { "id": "gi_any", "version": 1, "type": "yesno", "label": "Any digestive symptoms today?" },
+        {
+          "id": "gi_symptoms", "version": 1, "type": "multi",
+          "label": "Which?",
+          "showIf": { "q": "gi_any", "eq": true },
+          "options": [
+            { "value": "bloating", "label": "Bloating" },
+            { "value": "nausea", "label": "Nausea" },
+            { "value": "vomiting", "label": "Vomiting" },
+            { "value": "diarrhoea", "label": "Diarrhoea" },
+            { "value": "constipation", "label": "Constipation" },
+            { "value": "reflux", "label": "Heartburn / reflux" },
+            { "value": "wind", "label": "Wind" },
+            { "value": "other", "label": "Other" }
+          ]
+        },
+        {
+          "id": "reaction_any", "version": 1, "type": "yesno",
+          "label": "Any allergic-type reaction today?",
+          "help": "E.g. itchy mouth or throat, hives, swelling, sneezing or wheeze."
+        },
+        {
+          "id": "reaction_symptoms", "version": 1, "type": "multi",
+          "label": "Symptoms",
+          "showIf": { "q": "reaction_any", "eq": true },
+          "options": [
+            { "value": "mouth", "label": "Itchy mouth / throat" },
+            { "value": "hives", "label": "Hives / itchy skin" },
+            { "value": "swelling", "label": "Swelling (lips, eyes, face)" },
+            { "value": "nose", "label": "Runny nose / sneezing" },
+            { "value": "eyes", "label": "Itchy / watery eyes" },
+            { "value": "breathing", "label": "Wheeze / breathlessness" },
+            { "value": "gut", "label": "Vomiting / stomach cramps" },
+            { "value": "faint", "label": "Dizzy / faint" },
+            { "value": "other", "label": "Other" }
+          ]
+        },
+        {
+          "id": "reaction_onset", "version": 1, "type": "single",
+          "label": "How soon after eating did it start?",
+          "showIf": { "q": "reaction_any", "eq": true },
+          "options": [
+            { "value": "lt30min", "label": "Within 30 min" },
+            { "value": "30min-2h", "label": "30 min – 2 h" },
+            { "value": "gt2h", "label": "More than 2 h" },
+            { "value": "unrelated", "label": "Not after eating" },
+            { "value": "unsure", "label": "Not sure" }
+          ]
+        },
+        {
+          "id": "reaction_treatment", "version": 1, "type": "multi",
+          "label": "Treatment",
+          "showIf": { "q": "reaction_any", "eq": true },
+          "options": [
+            { "value": "none", "label": "None", "exclusive": true },
+            { "value": "antihistamine", "label": "Antihistamine" },
+            { "value": "inhaler", "label": "Inhaler" },
+            { "value": "adrenaline", "label": "Adrenaline auto-injector" },
+            { "value": "medical", "label": "Doctor / emergency care" }
+          ]
+        },
+        {
+          "id": "suspect_food", "version": 1, "type": "text",
+          "label": "Any food you suspect?",
+          "showIf": { "any": [
+            { "q": "pain_sites", "has": "stomach" },
+            { "q": "gi_any", "eq": true },
+            { "q": "reaction_any", "eq": true }
+          ] }
+        },
+        {
+          "id": "meal_before", "version": 1, "type": "text",
+          "label": "What did you eat in the hours before it started?",
+          "showIf": { "any": [
+            { "q": "pain_sites", "has": "stomach" },
+            { "q": "gi_any", "eq": true },
+            { "q": "reaction_any", "eq": true }
+          ] }
+        }
+      ]
+    },
+    {
+      "id": "food",
+      "version": 1,
+      "title": "Food & drink",
+      "help": "A quick tick-list for the whole day, not a full food diary.",
+      "schedule": { "everyDays": 1 },
+      "questions": [
+        {
+          "id": "food_allergens", "version": 1, "type": "multi",
+          "label": "Which of these did you eat today?",
+          "options": [
+            { "value": "none", "label": "None of these", "exclusive": true },
+            { "value": "gluten", "label": "Cereals with gluten (wheat, rye, barley, oats)" },
+            { "value": "milk", "label": "Milk / dairy" },
+            { "value": "egg", "label": "Egg" },
+            { "value": "peanut", "label": "Peanut" },
+            { "value": "nuts", "label": "Tree nuts" },
+            { "value": "soy", "label": "Soy" },
+            { "value": "sesame", "label": "Sesame" },
+            { "value": "fish", "label": "Fish" },
+            { "value": "crustaceans", "label": "Crustaceans" },
+            { "value": "molluscs", "label": "Molluscs" },
+            { "value": "celery", "label": "Celery" },
+            { "value": "mustard", "label": "Mustard" },
+            { "value": "lupin", "label": "Lupin" },
+            { "value": "sulphites", "label": "Sulphites (e.g. wine, dried fruit)" }
+          ]
+        },
+        {
+          "id": "food_triggers", "version": 1, "type": "multi",
+          "label": "And any of these?",
+          "options": [
+            { "value": "none", "label": "None of these", "exclusive": true },
+            { "value": "alcohol", "label": "Alcohol" },
+            { "value": "caffeine", "label": "Coffee / caffeine" },
+            { "value": "spicy", "label": "Spicy food" },
+            { "value": "fatty", "label": "Fatty / fried food" },
+            { "value": "onion_garlic", "label": "Onion / garlic" },
+            { "value": "legumes", "label": "Beans / lentils / chickpeas" },
+            { "value": "fruit", "label": "Fruit / fruit juice" },
+            { "value": "polyols", "label": "Sugar-free sweets / sweeteners" },
+            { "value": "fizzy", "label": "Fizzy drinks" },
+            { "value": "processed", "label": "Fast food / ultra-processed" },
+            { "value": "late_meal", "label": "Large or late meal" }
+          ]
+        },
+        { "id": "food_new", "version": 1, "type": "yesno", "label": "Anything new or unusual?" },
+        { "id": "food_new_what", "version": 1, "type": "text", "label": "What?", "showIf": { "q": "food_new", "eq": true } },
+        { "id": "meals", "version": 1, "type": "text", "label": "Meals today (optional)" }
+      ]
+    },
+    {
+      "id": "mood",
+      "version": 1,
+      "title": "Mood",
+      "help": "How was today overall?",
+      "schedule": { "everyDays": 1 },
+      "questions": [
+        { "id": "mood", "version": 1, "type": "scale", "label": "Mood", "min": 0, "max": 10, "step": 1, "minLabel": "Very bad", "maxLabel": "Very good" },
+        { "id": "anxiety", "version": 1, "type": "scale", "label": "Anxiety", "min": 0, "max": 10, "step": 1, "minLabel": "None", "maxLabel": "Extreme" },
+        { "id": "stress", "version": 1, "type": "scale", "label": "Stress", "min": 0, "max": 10, "step": 1, "minLabel": "None", "maxLabel": "Extreme" },
+        { "id": "energy", "version": 1, "type": "scale", "label": "Energy", "min": 0, "max": 10, "step": 1, "minLabel": "Exhausted", "maxLabel": "Full of energy" },
+        { "id": "irritability", "version": 1, "type": "scale", "label": "Irritability", "min": 0, "max": 10, "step": 1, "minLabel": "None", "maxLabel": "Extreme" }
+      ]
+    },
+    {
+      "id": "sleep",
+      "version": 1,
+      "title": "Sleep",
+      "help": "About last night – the night that ended on this date.",
+      "source": "Items follow the core questions of the Consensus Sleep Diary.",
+      "schedule": { "everyDays": 1 },
+      "questions": [
+        { "id": "sleep_bed", "version": 1, "type": "time", "label": "What time did you go to bed?" },
+        { "id": "sleep_try", "version": 1, "type": "time", "label": "What time did you try to fall asleep?" },
+        { "id": "sleep_latency", "version": 1, "type": "number", "label": "How long did it take to fall asleep?", "unit": "min", "min": 0, "max": 600 },
+        { "id": "sleep_wakes", "version": 1, "type": "number", "label": "How many times did you wake up, not counting the final awakening?", "unit": "times", "min": 0, "max": 50 },
+        { "id": "sleep_waso", "version": 1, "type": "number", "label": "In total, how long were these awakenings?", "unit": "min", "min": 0, "max": 600, "showIf": { "q": "sleep_wakes", "gte": 1 } },
+        { "id": "sleep_final", "version": 1, "type": "time", "label": "What time was your final awakening?" },
+        { "id": "sleep_up", "version": 1, "type": "time", "label": "What time did you get out of bed?" },
+        {
+          "id": "sleep_quality", "version": 1, "type": "single",
+          "label": "How would you rate the quality of your sleep?",
+          "options": [
+            { "value": 1, "label": "Very poor" },
+            { "value": 2, "label": "Poor" },
+            { "value": 3, "label": "Fair" },
+            { "value": 4, "label": "Good" },
+            { "value": 5, "label": "Very good" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "general",
+      "version": 1,
+      "title": "General",
+      "schedule": { "everyDays": 1 },
+      "questions": [
+        { "id": "health_overall", "version": 1, "type": "scale", "label": "Overall health today", "min": 0, "max": 10, "step": 1, "minLabel": "Very bad", "maxLabel": "Excellent" },
+        {
+          "id": "meds", "version": 1, "type": "multi",
+          "label": "Medicines or supplements today",
+          "options": [
+            { "value": "none", "label": "None", "exclusive": true },
+            { "value": "painkiller", "label": "Painkiller" },
+            { "value": "antihistamine", "label": "Antihistamine" },
+            { "value": "other", "label": "Other" }
+          ]
+        },
+        {
+          "id": "meds_detail", "version": 1, "type": "text",
+          "label": "Which ones, and how much?",
+          "showIf": { "all": [
+            { "q": "meds", "answered": true },
+            { "not": { "q": "meds", "has": "none" } }
+          ] }
+        },
+        { "id": "unwell", "version": 1, "type": "yesno", "label": "Ill or unwell today (e.g. cold, infection)?" },
+        { "id": "unwell_what", "version": 1, "type": "text", "label": "What?", "showIf": { "q": "unwell", "eq": true } },
+        { "id": "notes", "version": 1, "type": "text", "label": "Notes" }
+      ]
+    },
+    {
+      "id": "who5",
+      "version": 1,
+      "title": "Well-being (WHO-5)",
+      "help": "For each statement, choose what is closest to how you have been feeling over the last two weeks.",
+      "source": "WHO-5 Well-Being Index © World Health Organization, licensed CC BY-NC-SA 3.0 IGO.",
+      "schedule": { "everyDays": 14 },
+      "score": {
+        "id": "who5_score", "label": "WHO-5 (0–100)",
+        "items": ["who5_1", "who5_2", "who5_3", "who5_4", "who5_5"],
+        "multiply": 4, "min": 0, "max": 100
+      },
+      "questions": [
+        { "id": "who5_1", "version": 1, "type": "single", "label": "I have felt cheerful and in good spirits", "options": [ { "value": 5, "label": "All of the time" }, { "value": 4, "label": "Most of the time" }, { "value": 3, "label": "More than half of the time" }, { "value": 2, "label": "Less than half of the time" }, { "value": 1, "label": "Some of the time" }, { "value": 0, "label": "At no time" } ] },
+        { "id": "who5_2", "version": 1, "type": "single", "label": "I have felt calm and relaxed", "options": [ { "value": 5, "label": "All of the time" }, { "value": 4, "label": "Most of the time" }, { "value": 3, "label": "More than half of the time" }, { "value": 2, "label": "Less than half of the time" }, { "value": 1, "label": "Some of the time" }, { "value": 0, "label": "At no time" } ] },
+        { "id": "who5_3", "version": 1, "type": "single", "label": "I have felt active and vigorous", "options": [ { "value": 5, "label": "All of the time" }, { "value": 4, "label": "Most of the time" }, { "value": 3, "label": "More than half of the time" }, { "value": 2, "label": "Less than half of the time" }, { "value": 1, "label": "Some of the time" }, { "value": 0, "label": "At no time" } ] },
+        { "id": "who5_4", "version": 1, "type": "single", "label": "I woke up feeling fresh and rested", "options": [ { "value": 5, "label": "All of the time" }, { "value": 4, "label": "Most of the time" }, { "value": 3, "label": "More than half of the time" }, { "value": 2, "label": "Less than half of the time" }, { "value": 1, "label": "Some of the time" }, { "value": 0, "label": "At no time" } ] },
+        { "id": "who5_5", "version": 1, "type": "single", "label": "My daily life has been filled with things that interest me", "options": [ { "value": 5, "label": "All of the time" }, { "value": 4, "label": "Most of the time" }, { "value": 3, "label": "More than half of the time" }, { "value": 2, "label": "Less than half of the time" }, { "value": 1, "label": "Some of the time" }, { "value": 0, "label": "At no time" } ] }
+      ]
+    },
+    {
+      "id": "phq9",
+      "version": 1,
+      "title": "Depression (PHQ-9)",
+      "help": "Over the last 2 weeks, how often have you been bothered by any of the following problems?",
+      "source": "PHQ-9 (Spitzer, Williams & Kroenke). No permission required to reproduce.",
+      "schedule": { "everyDays": 14 },
+      "score": {
+        "id": "phq9_score", "label": "PHQ-9 total (0–27)",
+        "items": ["phq9_1", "phq9_2", "phq9_3", "phq9_4", "phq9_5", "phq9_6", "phq9_7", "phq9_8", "phq9_9"],
+        "min": 0, "max": 27
+      },
+      "alert": {
+        "if": { "q": "phq9_9", "gte": 1 },
+        "text": "You marked thoughts of being better off dead or of hurting yourself. You don't have to deal with this alone – please talk to someone you trust or your doctor. TelefonSeelsorge (free, 24/7): 0800 111 0 111 or 0800 111 0 222. In an emergency, call 112."
+      },
+      "questions": [
+        { "id": "phq9_1", "version": 1, "type": "single", "label": "Little interest or pleasure in doing things", "options": [ { "value": 0, "label": "Not at all" }, { "value": 1, "label": "Several days" }, { "value": 2, "label": "More than half the days" }, { "value": 3, "label": "Nearly every day" } ] },
+        { "id": "phq9_2", "version": 1, "type": "single", "label": "Feeling down, depressed, or hopeless", "options": [ { "value": 0, "label": "Not at all" }, { "value": 1, "label": "Several days" }, { "value": 2, "label": "More than half the days" }, { "value": 3, "label": "Nearly every day" } ] },
+        { "id": "phq9_3", "version": 1, "type": "single", "label": "Trouble falling or staying asleep, or sleeping too much", "options": [ { "value": 0, "label": "Not at all" }, { "value": 1, "label": "Several days" }, { "value": 2, "label": "More than half the days" }, { "value": 3, "label": "Nearly every day" } ] },
+        { "id": "phq9_4", "version": 1, "type": "single", "label": "Feeling tired or having little energy", "options": [ { "value": 0, "label": "Not at all" }, { "value": 1, "label": "Several days" }, { "value": 2, "label": "More than half the days" }, { "value": 3, "label": "Nearly every day" } ] },
+        { "id": "phq9_5", "version": 1, "type": "single", "label": "Poor appetite or overeating", "options": [ { "value": 0, "label": "Not at all" }, { "value": 1, "label": "Several days" }, { "value": 2, "label": "More than half the days" }, { "value": 3, "label": "Nearly every day" } ] },
+        { "id": "phq9_6", "version": 1, "type": "single", "label": "Feeling bad about yourself – or that you are a failure or have let yourself or your family down", "options": [ { "value": 0, "label": "Not at all" }, { "value": 1, "label": "Several days" }, { "value": 2, "label": "More than half the days" }, { "value": 3, "label": "Nearly every day" } ] },
+        { "id": "phq9_7", "version": 1, "type": "single", "label": "Trouble concentrating on things, such as reading the newspaper or watching television", "options": [ { "value": 0, "label": "Not at all" }, { "value": 1, "label": "Several days" }, { "value": 2, "label": "More than half the days" }, { "value": 3, "label": "Nearly every day" } ] },
+        { "id": "phq9_8", "version": 1, "type": "single", "label": "Moving or speaking so slowly that other people could have noticed? Or the opposite – being so fidgety or restless that you have been moving around a lot more than usual", "options": [ { "value": 0, "label": "Not at all" }, { "value": 1, "label": "Several days" }, { "value": 2, "label": "More than half the days" }, { "value": 3, "label": "Nearly every day" } ] },
+        { "id": "phq9_9", "version": 1, "type": "single", "label": "Thoughts that you would be better off dead or of hurting yourself in some way", "options": [ { "value": 0, "label": "Not at all" }, { "value": 1, "label": "Several days" }, { "value": 2, "label": "More than half the days" }, { "value": 3, "label": "Nearly every day" } ] },
+        {
+          "id": "phq9_difficulty", "version": 1, "type": "single",
+          "label": "If you checked off any problems, how difficult have these problems made it for you to do your work, take care of things at home, or get along with other people?",
+          "showIf": { "any": [
+            { "q": "phq9_1", "gte": 1 }, { "q": "phq9_2", "gte": 1 }, { "q": "phq9_3", "gte": 1 },
+            { "q": "phq9_4", "gte": 1 }, { "q": "phq9_5", "gte": 1 }, { "q": "phq9_6", "gte": 1 },
+            { "q": "phq9_7", "gte": 1 }, { "q": "phq9_8", "gte": 1 }, { "q": "phq9_9", "gte": 1 }
+          ] },
+          "options": [
+            { "value": 0, "label": "Not difficult at all" },
+            { "value": 1, "label": "Somewhat difficult" },
+            { "value": 2, "label": "Very difficult" },
+            { "value": 3, "label": "Extremely difficult" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gad7",
+      "version": 1,
+      "title": "Anxiety (GAD-7)",
+      "help": "Over the last 2 weeks, how often have you been bothered by the following problems?",
+      "source": "GAD-7 (Spitzer, Kroenke, Williams & Löwe). No permission required to reproduce.",
+      "schedule": { "everyDays": 14 },
+      "score": {
+        "id": "gad7_score", "label": "GAD-7 total (0–21)",
+        "items": ["gad7_1", "gad7_2", "gad7_3", "gad7_4", "gad7_5", "gad7_6", "gad7_7"],
+        "min": 0, "max": 21
+      },
+      "questions": [
+        { "id": "gad7_1", "version": 1, "type": "single", "label": "Feeling nervous, anxious, or on edge", "options": [ { "value": 0, "label": "Not at all" }, { "value": 1, "label": "Several days" }, { "value": 2, "label": "More than half the days" }, { "value": 3, "label": "Nearly every day" } ] },
+        { "id": "gad7_2", "version": 1, "type": "single", "label": "Not being able to stop or control worrying", "options": [ { "value": 0, "label": "Not at all" }, { "value": 1, "label": "Several days" }, { "value": 2, "label": "More than half the days" }, { "value": 3, "label": "Nearly every day" } ] },
+        { "id": "gad7_3", "version": 1, "type": "single", "label": "Worrying too much about different things", "options": [ { "value": 0, "label": "Not at all" }, { "value": 1, "label": "Several days" }, { "value": 2, "label": "More than half the days" }, { "value": 3, "label": "Nearly every day" } ] },
+        { "id": "gad7_4", "version": 1, "type": "single", "label": "Trouble relaxing", "options": [ { "value": 0, "label": "Not at all" }, { "value": 1, "label": "Several days" }, { "value": 2, "label": "More than half the days" }, { "value": 3, "label": "Nearly every day" } ] },
+        { "id": "gad7_5", "version": 1, "type": "single", "label": "Being so restless that it is hard to sit still", "options": [ { "value": 0, "label": "Not at all" }, { "value": 1, "label": "Several days" }, { "value": 2, "label": "More than half the days" }, { "value": 3, "label": "Nearly every day" } ] },
+        { "id": "gad7_6", "version": 1, "type": "single", "label": "Becoming easily annoyed or irritable", "options": [ { "value": 0, "label": "Not at all" }, { "value": 1, "label": "Several days" }, { "value": 2, "label": "More than half the days" }, { "value": 3, "label": "Nearly every day" } ] },
+        { "id": "gad7_7", "version": 1, "type": "single", "label": "Feeling afraid, as if something awful might happen", "options": [ { "value": 0, "label": "Not at all" }, { "value": 1, "label": "Several days" }, { "value": 2, "label": "More than half the days" }, { "value": 3, "label": "Nearly every day" } ] },
+        {
+          "id": "gad7_difficulty", "version": 1, "type": "single",
+          "label": "If you checked off any problems, how difficult have these made it for you to do your work, take care of things at home, or get along with other people?",
+          "showIf": { "any": [
+            { "q": "gad7_1", "gte": 1 }, { "q": "gad7_2", "gte": 1 }, { "q": "gad7_3", "gte": 1 },
+            { "q": "gad7_4", "gte": 1 }, { "q": "gad7_5", "gte": 1 }, { "q": "gad7_6", "gte": 1 },
+            { "q": "gad7_7", "gte": 1 }
+          ] },
+          "options": [
+            { "value": 0, "label": "Not difficult at all" },
+            { "value": 1, "label": "Somewhat difficult" },
+            { "value": 2, "label": "Very difficult" },
+            { "value": 3, "label": "Extremely difficult" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pss10",
+      "version": 1,
+      "title": "Stress (PSS-10)",
+      "enabled": false,
+      "help": "About the last month.",
+      "source": "Perceived Stress Scale (Cohen). Copyrighted: paste the official item wording into the labels, then set \"enabled\": true.",
+      "schedule": { "everyDays": 30 },
+      "score": {
+        "id": "pss10_score", "label": "PSS-10 total (0–40)",
+        "items": ["pss10_1", "pss10_2", "pss10_3", "pss10_4", "pss10_5", "pss10_6", "pss10_7", "pss10_8", "pss10_9", "pss10_10"],
+        "reverse": ["pss10_4", "pss10_5", "pss10_7", "pss10_8"], "reverseFrom": 4,
+        "min": 0, "max": 40
+      },
+      "questions": [
+        { "id": "pss10_1", "version": 1, "type": "single", "label": "PSS-10 item 1 – paste the official wording here", "options": [ { "value": 0, "label": "Never" }, { "value": 1, "label": "Almost never" }, { "value": 2, "label": "Sometimes" }, { "value": 3, "label": "Fairly often" }, { "value": 4, "label": "Very often" } ] },
+        { "id": "pss10_2", "version": 1, "type": "single", "label": "PSS-10 item 2 – paste the official wording here", "options": [ { "value": 0, "label": "Never" }, { "value": 1, "label": "Almost never" }, { "value": 2, "label": "Sometimes" }, { "value": 3, "label": "Fairly often" }, { "value": 4, "label": "Very often" } ] },
+        { "id": "pss10_3", "version": 1, "type": "single", "label": "PSS-10 item 3 – paste the official wording here", "options": [ { "value": 0, "label": "Never" }, { "value": 1, "label": "Almost never" }, { "value": 2, "label": "Sometimes" }, { "value": 3, "label": "Fairly often" }, { "value": 4, "label": "Very often" } ] },
+        { "id": "pss10_4", "version": 1, "type": "single", "label": "PSS-10 item 4 – paste the official wording here", "options": [ { "value": 0, "label": "Never" }, { "value": 1, "label": "Almost never" }, { "value": 2, "label": "Sometimes" }, { "value": 3, "label": "Fairly often" }, { "value": 4, "label": "Very often" } ] },
+        { "id": "pss10_5", "version": 1, "type": "single", "label": "PSS-10 item 5 – paste the official wording here", "options": [ { "value": 0, "label": "Never" }, { "value": 1, "label": "Almost never" }, { "value": 2, "label": "Sometimes" }, { "value": 3, "label": "Fairly often" }, { "value": 4, "label": "Very often" } ] },
+        { "id": "pss10_6", "version": 1, "type": "single", "label": "PSS-10 item 6 – paste the official wording here", "options": [ { "value": 0, "label": "Never" }, { "value": 1, "label": "Almost never" }, { "value": 2, "label": "Sometimes" }, { "value": 3, "label": "Fairly often" }, { "value": 4, "label": "Very often" } ] },
+        { "id": "pss10_7", "version": 1, "type": "single", "label": "PSS-10 item 7 – paste the official wording here", "options": [ { "value": 0, "label": "Never" }, { "value": 1, "label": "Almost never" }, { "value": 2, "label": "Sometimes" }, { "value": 3, "label": "Fairly often" }, { "value": 4, "label": "Very often" } ] },
+        { "id": "pss10_8", "version": 1, "type": "single", "label": "PSS-10 item 8 – paste the official wording here", "options": [ { "value": 0, "label": "Never" }, { "value": 1, "label": "Almost never" }, { "value": 2, "label": "Sometimes" }, { "value": 3, "label": "Fairly often" }, { "value": 4, "label": "Very often" } ] },
+        { "id": "pss10_9", "version": 1, "type": "single", "label": "PSS-10 item 9 – paste the official wording here", "options": [ { "value": 0, "label": "Never" }, { "value": 1, "label": "Almost never" }, { "value": 2, "label": "Sometimes" }, { "value": 3, "label": "Fairly often" }, { "value": 4, "label": "Very often" } ] },
+        { "id": "pss10_10", "version": 1, "type": "single", "label": "PSS-10 item 10 – paste the official wording here", "options": [ { "value": 0, "label": "Never" }, { "value": 1, "label": "Almost never" }, { "value": 2, "label": "Sometimes" }, { "value": 3, "label": "Fairly often" }, { "value": 4, "label": "Very often" } ] }
+      ]
+    }
+  ]
+}
