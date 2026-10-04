@@ -1,0 +1,6 @@
+# This repo holds the app's code only. Never commit data, questions or exports here.
+config.json
+entries/
+*.csv
+diary-*.json
+.DS_Store
