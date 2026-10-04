@@ -9,7 +9,7 @@ import { calendarScreen } from './calendar.js';
 import { trendsScreen } from './trends.js';
 import { settingsScreen } from './settings.js';
 
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 const AUTO_REFRESH_MINUTES = 10;   // re-check config.json at most this often when the app comes back
 
 // Screens by address: #/today, #/day/<date>, #/pack/<pack id>/<date>, #/calendar[/<YYYY-MM>],

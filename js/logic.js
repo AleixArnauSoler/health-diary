@@ -136,7 +136,8 @@ export function packVisibility(pack, ownValues, date, answersFor) {
   return { visible, values, lookup };
 }
 
-// 'new' (nothing answered), 'partial' or 'done'. Free-text questions are optional.
+// 'new' (nothing answered), 'partial' or 'done'. Free-text questions are optional, and so are questions
+// added after this date ("since"), so older days stay complete when new questions appear.
 export function packStatus(pack, date, answersFor) {
   const saved = answersFor(date);
   const own = {};
@@ -146,7 +147,8 @@ export function packStatus(pack, date, answersFor) {
   }
   if (!started) return 'new';
   const { visible } = packVisibility(pack, own, date, answersFor);
-  const missing = pack.questions.some((q) => visible[q.id] && q.type !== 'text' && !isAnswered(own[q.id]));
+  const missing = pack.questions.some((q) =>
+    visible[q.id] && q.type !== 'text' && !(q.since && date < q.since) && !isAnswered(own[q.id]));
   return missing ? 'partial' : 'done';
 }
 
@@ -176,6 +178,7 @@ export function packsForDay(config, date, entryDates, answersFor) {
     if (pack.retired || pack.enabled === false) continue;
     if (!evaluate(pack.showIf, lookup)) continue;
     const status = packStatus(pack, date, answersFor);
+    if (pack.since && date < pack.since && status === 'new') continue;      // pack added after this day
     if (status !== 'new') {
       due.push({ pack, status });
       continue;
@@ -190,7 +193,9 @@ export function packsForDay(config, date, entryDates, answersFor) {
 // ---------- Scores ----------
 
 // Sum of the score items (with reversed items and multiplier), or null until all items are answered.
+// "zeroIf": a condition that makes the score 0 (e.g. no panic attack at all, so the follow-ups are skipped).
 export function computeScore(score, values) {
+  if (score.zeroIf && evaluate(score.zeroIf, (id) => values[id])) return 0;
   let total = 0;
   for (const id of score.items) {
     const value = values[id];

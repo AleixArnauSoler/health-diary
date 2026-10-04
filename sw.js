@@ -3,7 +3,7 @@
 // Strategy: always try the network first (so new versions arrive as soon as you're online),
 // and fall back to the stored copy when there is no connection.
 
-const CACHE = 'diary-1.1.0';
+const CACHE = 'diary-1.2.0';
 
 const APP_FILES = [
   './',

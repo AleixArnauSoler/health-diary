@@ -155,6 +155,24 @@ function summaryHtml(config, answers, cycleInfo) {
     rows.push(textRow('Sleep', [duration, quality && quality.toLowerCase()].filter(Boolean).join(', ')));
   }
   if (typeof answers.sex === 'boolean') rows.push(textRow('Sex', answers.sex ? 'Yes' : 'No'));
+  const listRow = (id, label) => {
+    const v = answers[id];
+    if (Array.isArray(v) && !(v.length === 1 && v[0] === 'none')) rows.push(textRow(label, v.map((x) => optionLabel(id, x)).join(', ')));
+  };
+  listRow('creams', 'Creams');
+  if (!Array.isArray(answers.creams) && answers.oekolp === true) rows.push(textRow('Creams', 'OeKolp'));   // before 1.2.0
+  if (typeof answers.alcohol_drinks === 'number') {
+    rows.push(textRow('Alcohol', `${answers.alcohol_drinks} ${answers.alcohol_drinks === 1 ? 'drink' : 'drinks'}`));
+  }
+  if (answers.hangover === true) rows.push(textRow('Hangover', 'Yes'));
+  if (answers.panic_attack === true) rows.push(textRow('Panic attack', 'Yes'));
+  if (answers.exercise_any === true) {
+    const types = Array.isArray(answers.exercise_types)
+      ? answers.exercise_types.map((t) => optionLabel('exercise_types', t)).join(', ') : 'Yes';
+    const minutes = typeof answers.exercise_minutes === 'number' ? ` (${answers.exercise_minutes} min)` : '';
+    rows.push(textRow('Exercise', types + minutes));
+  }
+  listRow('circumstances', 'Going on');
   for (const pack of config.packs) {
     if (!pack.score) continue;
     const score = computeScore(pack.score, answers);

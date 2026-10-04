@@ -146,13 +146,15 @@ export function syncNow() {
 }
 
 // Timers don't run while the app is in the background: if a backup is waiting, start it now.
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden && timer) {
-    clearTimeout(timer);
-    timer = null;
-    syncNow();
-  }
-});
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && timer) {
+      clearTimeout(timer);
+      timer = null;
+      syncNow();
+    }
+  });
+}
 
 async function runSync() {
   if (isDemoMode()) return setState({ status: 'demo', pending: 0 });

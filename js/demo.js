@@ -7,7 +7,9 @@
 //   • stomach pain and bloating far more likely on days with milk/dairy
 //   • stress higher on weekdays and during one "deadline" week; a 5-day cold
 //   • test factor phases from the spreadsheet: no test → condom test → lubricant test
-//   • two allergic-type reactions (prawns; pollen), PHQ-9 / GAD-7 / WHO-5 every ~2 weeks
+//   • two allergic-type reactions (prawns; pollen), PHQ-9 / GAD-7 / WHO-5 every ~2 weeks, panic every 4 weeks
+//   • a holiday (more alcohol, less stress), an exam period, exercise lifting mood a little,
+//     hangovers after evenings with 4+ drinks, rare panic attacks on anxious days
 
 import { addDays, nowLocalISO, isAnswered, packVisibility } from './logic.js';
 
@@ -30,7 +32,8 @@ export function buildDemoEntries(config, configSha, today) {
   const REACTION_DAY = 20;
   const POLLEN_DAY = 70;
   const ill = (i) => i >= 31 && i <= 35;
-  const deadline = (i) => i >= 50 && i <= 56;
+  const deadline = (i) => i >= 50 && i <= 56;           // exam period
+  const holiday = (i) => i >= 15 && i <= 24;
 
   // Menstrual cycles covering the whole period
   const cycles = [];
@@ -61,6 +64,8 @@ export function buildDemoEntries(config, configSha, today) {
   let lastShave = -int(1, 6);
   let nextShaveGap = int(7, 12);
   let nextPeriodic = 2;
+  let nextPanicCheck = 3;
+  let drinksPrev = 0;
 
   for (let i = 0; i < DAYS; i++) {
     const date = addDays(firstDay, i);
@@ -81,7 +86,7 @@ export function buildDemoEntries(config, configSha, today) {
     if (i === REACTION_DAY && !allergens.includes('crustaceans')) allergens.push('crustaceans');
     v.food_allergens = allergens.length ? allergens : ['none'];
     const triggerOdds = {
-      alcohol: weekend ? 0.5 : 0.12, caffeine: 0.85, spicy: 0.15, fatty: 0.25, onion_garlic: 0.6, legumes: 0.25,
+      alcohol: weekend || holiday(i) ? 0.5 : 0.12, caffeine: 0.85, spicy: 0.15, fatty: 0.25, onion_garlic: 0.6, legumes: 0.25,
       fruit: 0.55, polyols: 0.05, fizzy: 0.1, processed: 0.15, late_meal: weekend ? 0.3 : 0.1
     };
     const triggers = Object.keys(triggerOdds).filter((k) => chance(triggerOdds[k]));
@@ -92,11 +97,13 @@ export function buildDemoEntries(config, configSha, today) {
       v.meals = pick(['Muesli; pasta salad; vegetable curry', 'Toast; lentil soup; pizza', 'Yoghurt; sandwich; stir-fry',
         'Porridge; canteen lunch; omelette', 'Croissant; salad bowl; risotto']);
     }
+    const drinks = triggers.includes('alcohol') ? (weekend || holiday(i) ? int(2, 5) : int(1, 2)) : 0;
+    if (drinks) v.alcohol_drinks = drinks;
     const milk = allergens.includes('milk');
     const gasProne = triggers.includes('legumes') || triggers.includes('onion_garlic');
 
     // ----- Stress (affects sleep) -----
-    const stressBase = 3.5 + (weekend ? -1 : 0.8) + (deadline(i) ? 3 : 0) + (ill(i) ? 1 : 0);
+    const stressBase = 3.5 + (weekend ? -1 : 0.8) + (deadline(i) ? 3 : 0) + (ill(i) ? 1 : 0) - (holiday(i) ? 1.5 : 0);
     const stressLatent = 0.55 * stressPrev + 0.45 * stressBase + normal() * 0.6;
     stressPrev = stressLatent;
 
@@ -155,8 +162,13 @@ export function buildDemoEntries(config, configSha, today) {
     v.itch = chance(0.12 + (c.day <= c.period ? 0.15 : 0) + (premenstrual ? 0.1 : 0) - (probiotics ? 0.05 : 0))
       ? weighted([[1, 75], [2, 25]]) : 0;
     if (sexPrev) v.nextday = clamp(fissureAfterSexPrev + (chance(0.25) ? 1 : 0) - (chance(0.3) ? 1 : 0), 0, 3);
-    v.oekolp = (weekday === 1 || weekday === 4) && chance(0.9);
-    if (v.oekolp) v.oekolp_amount = pick(['normal', 'normal', 'thin']);
+    const creams = [];
+    if (fissurePrev >= 1 && chance(0.5)) creams.push('bepanthen');
+    if ((weekday === 1 || weekday === 4) && chance(0.9)) creams.push('oekolp');
+    if (v.itch >= 2 && chance(0.3)) creams.push('corticosteroid');
+    if (chance(0.03)) creams.push('deumavan');
+    v.creams = creams.length ? creams : ['none'];
+    if (creams.includes('oekolp')) v.oekolp_amount = pick(['normal', 'normal', 'thin']);
     if (i - lastShave >= nextShaveGap) { lastShave = i; nextShaveGap = int(7, 12); }
     const sinceShave = i - lastShave;
     v.shave_since = sinceShave === 0 ? 'lt24h' : sinceShave <= 2 ? '24-48h' : sinceShave <= 7 ? '3-7d' : 'gt7d';
@@ -210,10 +222,21 @@ export function buildDemoEntries(config, configSha, today) {
       }
     }
 
+    // ----- Exercise -----
+    v.exercise_any = !ill(i) && chance(holiday(i) ? 0.6 : 0.45);
+    if (v.exercise_any) {
+      const kinds = ['yoga', 'stretching', 'running', 'squash', 'weights', 'cycling', 'dancing', 'swimming'];
+      const first = pick(kinds);
+      v.exercise_types = chance(0.3) ? [first, pick(kinds.filter((k) => k !== first))] : [first];
+      v.exercise_minutes = 5 * int(4, 18);
+      v.exercise_intensity = weighted([[1, 30], [2, 50], [3, 20]]);
+    }
+
     // ----- Mood -----
     const maxPain = Math.max(0, ...Object.values(sites));
     const moodBase = 6.8 - (premenstrual ? 1.4 : 0) - (earlyPeriod ? 0.8 : 0) - (quality <= 2 ? 1 : 0) -
-      (maxPain >= 5 ? 0.8 : 0) + (weekend ? 0.4 : 0) - (ill(i) ? 1.2 : 0) - (deadline(i) ? 0.8 : 0);
+      (maxPain >= 5 ? 0.8 : 0) + (weekend ? 0.4 : 0) - (ill(i) ? 1.2 : 0) - (deadline(i) ? 0.8 : 0) +
+      (v.exercise_any ? 0.4 : 0) + (holiday(i) ? 0.6 : 0);
     const moodLatent = 0.5 * moodPrev + 0.5 * moodBase + normal() * 0.7;
     moodPrev = moodLatent;
     v.mood = clamp(Math.round(moodLatent), 0, 10);
@@ -221,7 +244,8 @@ export function buildDemoEntries(config, configSha, today) {
     v.stress = clamp(Math.round(stressLatent + normal() * 0.6), 0, 10);
     v.energy = clamp(Math.round(6 + (quality - 3) * 0.8 - (ill(i) ? 2 : 0) - (earlyPeriod ? 1 : 0) + normal() * 0.8), 0, 10);
     v.irritability = clamp(Math.round(2 + (premenstrual ? 2 : 0) + (stressLatent - 3.5) * 0.4 + normal() * 0.9), 0, 10);
-    history.push({ mood: v.mood, anxiety: v.anxiety, energy: v.energy, quality });
+    v.panic_attack = chance(v.anxiety >= 6 ? 0.12 : 0.01);
+    history.push({ mood: v.mood, anxiety: v.anxiety, energy: v.energy, quality, panic: v.panic_attack });
 
     // ----- General -----
     v.health_overall = clamp(Math.round(7.5 - (ill(i) ? 2.5 : 0) - (maxPain >= 5 ? 1.5 : maxPain > 0 ? 0.5 : 0) -
@@ -235,6 +259,13 @@ export function buildDemoEntries(config, configSha, today) {
     }
     v.unwell = ill(i);
     if (v.unwell) v.unwell_what = 'Cold';
+    v.hangover = drinksPrev >= 4 && chance(0.6);
+    drinksPrev = drinks;
+    const going = [];
+    if (holiday(i)) going.push('holiday');
+    if (i === 15 || i === 24) going.push('travel');
+    if (deadline(i)) going.push('exams');
+    v.circumstances = going.length ? going : ['none'];
     if (chance(0.08)) v.notes = pick(['Long day at work', 'Ran 5 km', 'Visited friends', 'Travel day', 'Slept badly, noisy street']);
 
     // ----- Questionnaires every ~2 weeks -----
@@ -257,10 +288,24 @@ export function buildDemoEntries(config, configSha, today) {
       for (let k = 1; k <= 5; k++) v[`who5_${k}`] = clamp(Math.round(2.5 + (mood - 6) * 0.5 + normal() * 0.6), 0, 5);
     }
 
+    const panicToday = i >= nextPanicCheck;
+    if (panicToday) {
+      nextPanicCheck = i + 28 + (chance(0.3) ? 1 : 0);
+      const attacks = history.slice(-28).filter((d) => d.panic).length;
+      v.panic_1 = attacks ? 1 : 0;
+      if (attacks) {
+        v.panic_2 = chance(0.8) ? 1 : 0;
+        v.panic_3 = chance(0.5) ? 1 : 0;
+        v.panic_4 = attacks >= 2 && chance(0.6) ? 1 : 0;
+        v.panic_5 = chance(0.85) ? 1 : 0;
+      }
+    }
+
     // ----- Which packs were filled in, and when -----
     const compliance = weighted([['full', 87], ['skip', 7], ['light', 6]]);
     if (compliance === 'skip') continue;
     const dayPacks = packs.filter((p) => {
+      if (p.id === 'panic') return panicToday && compliance === 'full';
       if (p.schedule.everyDays > 1) return periodicToday && compliance === 'full';
       return compliance === 'full' || p.id === 'cycle' || p.id === 'mood';
     });

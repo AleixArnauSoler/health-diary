@@ -92,6 +92,7 @@ export function validateConfig(config) {
     if (typeof pack.title !== 'string' || !pack.title) problems.push(`${where}: "title" is missing.`);
     const every = pack.schedule && pack.schedule.everyDays;
     if (!Number.isInteger(every) || every < 1) problems.push(`${where}: "schedule.everyDays" must be a whole number of 1 or more.`);
+    if (pack.since !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(pack.since)) problems.push(`${where}: "since" must be a date like "2026-10-04".`);
     if (!Array.isArray(pack.questions) || pack.questions.length === 0) {
       problems.push(`${where}: "questions" must be a list with at least one question.`);
       continue;
@@ -105,6 +106,7 @@ export function validateConfig(config) {
       if (!isVersion(q.version)) problems.push(`${qWhere}: "version" must be a whole number of 1 or more.`);
       if (!TYPES.includes(q.type)) problems.push(`${qWhere}: "type" must be one of ${TYPES.join(', ')}.`);
       if (typeof q.label !== 'string' || !q.label) problems.push(`${qWhere}: "label" is missing.`);
+      if (q.since !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(q.since)) problems.push(`${qWhere}: "since" must be a date like "2026-10-04".`);
 
       if (q.type === 'single' || q.type === 'multi') {
         if (!Array.isArray(q.options) || q.options.length < 2) {
@@ -160,6 +162,7 @@ export function validateConfig(config) {
       (pack.score.reverse || []).forEach((id) => {
         if (!(pack.score.items || []).includes(id)) problems.push(`${where}: reversed item "${id}" is not in "items".`);
       });
+      checkCondition(pack.score.zeroIf, where);
     }
     if (pack.alert) {
       checkCondition(pack.alert.if, `Alert of pack "${pack.id}"`);

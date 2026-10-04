@@ -152,6 +152,8 @@ function getterFor(ctx, key) {
   }
   if (key === 'calc:sleep') return (date) => { const m = sleepMinutes(ctx.answersFor(date)); return m === null ? null : Math.round(m / 6) / 10; };
   if (key === 'calc:pain') return (date) => worstPain(ctx.answersFor(date));
+  if (key === 'calc:alcohol') return (date) => alcoholDrinks(ctx.answersFor(date));
+  if (key === 'calc:exercise') return (date) => exerciseMinutes(ctx.answersFor(date));
   return (date) => numberOrNull(answer(ctx, date, id));
 }
 
@@ -160,6 +162,20 @@ function worstPain(a) {
   if (!Array.isArray(a.pain_sites)) return null;
   const values = a.pain_sites.map((site) => a[`pain_${site}`]).filter((v) => typeof v === 'number');
   return values.length ? Math.max(...values) : null;
+}
+
+// Drinks that day: 0 if alcohol wasn't ticked, null if the food questions weren't answered.
+function alcoholDrinks(a) {
+  if (!Array.isArray(a.food_triggers)) return null;
+  if (!a.food_triggers.includes('alcohol')) return 0;
+  return numberOrNull(a.alcohol_drinks);
+}
+
+// Exercise minutes that day: 0 on days without exercise.
+function exerciseMinutes(a) {
+  if (a.exercise_any === false) return 0;
+  if (a.exercise_any !== true) return null;
+  return numberOrNull(a.exercise_minutes);
 }
 
 function series(ctx, getter) {
@@ -377,6 +393,50 @@ function overview(ctx) {
     shown++;
   }
 
+  if (has('sleep_quality')) {
+    const quality = series(ctx, getterFor(ctx, 'q:sleep_quality'));
+    if (anyValue(quality)) {
+      b.chart('Sleep quality', `${how}, 1 = very poor, 5 = very good`,
+        lineConfig(ctx.labels, [{ label: 'Sleep quality', data: quality }], { min: 1, max: 5, legend: false }));
+      shown++;
+    }
+  }
+
+  const perBucket = (getter) => buckets(ctx).map((g) => g.days.reduce((sum, d) => sum + (getter(d) || 0), 0));
+  const bucketLabels = buckets(ctx).map((g) => g.label);
+
+  if (has('exercise_any')) {
+    const getter = getterFor(ctx, 'calc:exercise');
+    const answered = ctx.days.filter((d) => typeof answer(ctx, d, 'exercise_any') === 'boolean').length;
+    const active = ctx.days.filter((d) => answer(ctx, d, 'exercise_any') === true).length;
+    if (active) {
+      b.chart('Exercise', `Minutes per ${ctx.bucket}`, barConfig(bucketLabels, [{ label: 'Minutes', data: perBucket(getter) }], { legend: false }),
+        `<p class="chart-foot">Exercised on ${active} of ${answered} answered days.</p>`);
+      shown++;
+    }
+  }
+
+  if (has('alcohol_drinks')) {
+    const drinks = perBucket(getterFor(ctx, 'calc:alcohol'));
+    const total = drinks.reduce((sum, x) => sum + x, 0);
+    const hangovers = has('hangover') ? ctx.days.filter((d) => answer(ctx, d, 'hangover') === true).length : 0;
+    if (total || hangovers) {
+      b.chart('Alcohol', `Drinks per ${ctx.bucket}`, barConfig(bucketLabels, [{ label: 'Drinks', data: drinks }], { legend: false }),
+        `<p class="chart-foot">${total} ${total === 1 ? 'drink' : 'drinks'} in this period${has('hangover')
+          ? `, hangover on ${hangovers} ${hangovers === 1 ? 'day' : 'days'}` : ''}.</p>`);
+      shown++;
+    }
+  }
+
+  if (has('panic_attack')) {
+    const counts = perBucket((d) => (answer(ctx, d, 'panic_attack') === true ? 1 : 0));
+    if (counts.some(Boolean)) {
+      b.chart('Panic attacks', `Days with a panic attack per ${ctx.bucket}`,
+        barConfig(bucketLabels, [{ label: 'Days', data: counts }], { legend: false }));
+      shown++;
+    }
+  }
+
   const cyc = ctx.cycles.cycles.filter((c) => c.length && c.start >= addDays(ctx.from, -60) && c.start <= ctx.to);
   if (cyc.length) {
     b.chart('Cycle length', 'Days from one period to the next, and period length',
@@ -391,7 +451,7 @@ function overview(ctx) {
 
   const scorePacks = ctx.config.packs.filter((p) => p.score && !p.retired && p.enabled !== false);
   const small = scorePacks.filter((p) => (p.score.max || 0) <= 40);
-  const smallSets = small.map((p) => ({ label: p.title.replace(/.*\((.*)\)/, '$1'), data: ctx.days.map(getterFor(ctx, `score:${p.id}`)) }))
+  const smallSets = small.map((p) => ({ label: p.score.label, data: ctx.days.map(getterFor(ctx, `score:${p.id}`)) }))
     .filter((s) => anyValue(s.data));
   if (smallSets.length) {
     b.chart('Questionnaire scores', 'Totals each time you filled them in (higher = more symptoms)',
@@ -428,7 +488,9 @@ function exploreItems(ctx) {
     if (items.length) groups.push({ label: pack.title, items });
   }
   const scores = ctx.config.packs.filter((p) => p.score && !p.retired).map((p) => ({ key: `score:${p.id}`, label: p.score.label }));
-  const calculated = [{ key: 'calc:sleep', label: 'Time asleep (hours)' }, { key: 'calc:pain', label: 'Worst pain of the day' },
+  const calculated = [{ key: 'calc:sleep', label: 'Time asleep (hours, until Oct 2026)' }, { key: 'calc:pain', label: 'Worst pain of the day' },
+    { key: 'calc:alcohol', label: 'Alcoholic drinks (0 on days without)' },
+    { key: 'calc:exercise', label: 'Exercise minutes (0 on days without)' },
     { key: 'calc:cycle', label: 'Cycle and period length' }];
   return [...groups, { label: 'Scores', items: scores }, { label: 'Calculated', items: calculated }].filter((g) => g.items.length);
 }
@@ -658,7 +720,8 @@ function phaseInsight(ctx) {
   if (!ctx.cycles.cycles.length) return '';
   const measures = [
     ['mood', 'Mood'], ['anxiety', 'Anxiety'], ['stress', 'Stress'], ['irritability', 'Irritability'], ['energy', 'Energy'],
-    ['calc:pain', 'Worst pain'], ['itch', 'Itching'], ['fissure', 'Tearing'], ['calc:sleep', 'Hours asleep'], ['health_overall', 'Overall health']
+    ['calc:pain', 'Worst pain'], ['itch', 'Itching'], ['fissure', 'Tearing'], ['sleep_quality', 'Sleep quality'],
+    ['calc:sleep', 'Hours asleep'], ['calc:alcohol', 'Alcohol drinks'], ['calc:exercise', 'Exercise min'], ['health_overall', 'Overall health']
   ].filter(([id]) => id.startsWith('calc:') || ctx.questions.has(id));
   const phases = PHASES.filter((p) => p.id !== 'unclear');
   const short = { menstruation: 'Period', follicular: 'Follic.', ovulation: 'Ovul.', luteal: 'Luteal', premenstrual: 'Pre-' };
@@ -715,7 +778,12 @@ function vulvaInsight(ctx) {
     ['condom', 'Condom', (d) => answer(ctx, d, 'condom')],
     ['lube', 'Lubricant', (d) => answer(ctx, d, 'lube')],
     ['shave_since', 'Last shave', (d) => answer(ctx, d, 'shave_since')],
-    ['oekolp', 'OeKolp that day', (d) => answer(ctx, d, 'oekolp')],
+    ['creams', 'Creams that day', (d) => {
+      const list = answer(ctx, d, 'creams');
+      if (Array.isArray(list)) return list;
+      const old = answer(ctx, d, 'oekolp');                     // before 1.2.0 only OeKolp was asked
+      return old === true ? ['oekolp'] : old === false ? ['none'] : undefined;
+    }],
     ['probiotics', 'Probiotics that day', (d) => answer(ctx, d, 'probiotics')],
     ['phase', 'Cycle phase', (d) => (cycleDayInfo(ctx.cycles, d) || { phase: 'unclear' }).phase],
     ['test_factor', 'Active test', (d) => {
@@ -732,8 +800,10 @@ function vulvaInsight(ctx) {
     for (const d of sexDays) {
       const v = valueOf(d);
       if (v === undefined || v === null) continue;
-      if (!groups.has(v)) groups.set(v, []);
-      groups.get(v).push(d);
+      for (const one of Array.isArray(v) ? v : [v]) {           // multi-choice: a day counts for each answer
+        if (!groups.has(one)) groups.set(one, []);
+        groups.get(one).push(d);
+      }
     }
     if (!groups.size) return '';
     const rows = [...groups.entries()].map(([v, days]) => {
